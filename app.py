@@ -8,29 +8,21 @@ from version import __version__
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-for-development')
 
-@app.route("/api")
-def block_api_root():
-    return "Access to /api is not allowed", 403
-
-@app.route("/api/customer")
-def api_customer():
+def enriched_customers():
     enriched_customers = {
         'customer_id': [1001, 1002, 1003, 1004, 1005, 1006],
         'first_name': ['John', 'Jane', 'Mike', 'Sarah', 'Bob', 'Alice'],
         'last_name': ['Smith', 'Doe', 'Johnson', 'Wilson', 'Brown', 'Cooper'],
-        'email': ['john@email.com', 'jane@email.com', 'mike@techcorp.com', 
-                  'sarah@retailplus.com', 'bob@email.com', 'alice@freelance.com'],
-        'phone': ['01234567890', '01987654321', '01555123456', 
-                  '01777888999', '01111222333', '01444555666'],
-        'postcode': ['SW1A 1AA', 'M1 1AF', 'B1 1BB', 'LS1 2AJ', 'NE1 3NG', 'CF10 2HH']
+        'email': ['john@email.com','jane@email.com','mike@techcorp.com','sarah@retailplus.com','bob@email.com','alice@freelance.com'],
+        'phone': ['01234567890', '01987654321', '01555123456', '01777888999', '01111222333', '01444555666'],
+        'postcode': ['SW1A1AA', 'M11AF', 'B11BB', 'LS12AJ', 'NE13NG', 'CF102HH'],
+        'status': ['active', 'active', 'active', 'suspended', 'active', 'active'],
     }
-    return jsonify(enriched_customers)
+    return enriched_customers
 
-@app.route("/api/region")
-def api_region():
+def regions():
     regions = {
-        'region_id': [1, 2, 3, 4, 5, 6],  # Links to customer records by position
-        'postcode': ['SW1A 1AA', 'M1 1AF', 'B1 1BB', 'LS1 2AJ', 'NE1 3NG', 'CF10 2HH'],
+        'postcode': ['SW1A1AA', 'M11AF', 'B11BB', 'LS12AJ', 'NE13NG', 'CF102HH'],
         'region': ['London', 'North West', 'West Midlands', 'Yorkshire and The Humber', 'North East', 'Wales'],
         'country': ['England', 'England', 'England', 'England', 'England', 'Wales'],
         'district': ['Westminster', 'Manchester', 'Birmingham', 'Leeds', 'Newcastle', 'Cardiff'],
@@ -38,7 +30,41 @@ def api_region():
         'latitude': [51.5014, 53.4794, 52.4796, 53.7997, 54.9738, 51.4816],
         'geo_enriched': [1, 1, 1, 1, 1, 1]
     }
-    return jsonify(regions)
+    return regions
+
+@app.route("/api")
+def block_api_root():
+    return "Access to /api is not allowed", 403
+
+@app.route("/api/customer")
+def api_customer():
+    data = enriched_customers()
+    return jsonify(data)
+
+@app.route("/api/customer/<int:customer_id>")
+def api_customer_by_id(customer_id):
+    data = enriched_customers()
+    try:
+        index = data['customer_id'].index(customer_id)
+        customer = {key: values[index] for key, values in data.items()}
+        return jsonify(customer)
+    except ValueError:
+        return jsonify({'error': 'Customer not found'}), 404
+
+@app.route("/api/region")
+def api_region():
+    data = regions()
+    return jsonify(data)
+
+@app.route("/api/region/<postcode>")
+def api_region_by_postcode(postcode):
+    data = regions()
+    try:
+        index = data['postcode'].index(postcode)
+        region = {key: values[index] for key, values in data.items()}
+        return jsonify(region)
+    except ValueError:
+        return jsonify({'error': 'Postcode not found'}), 404
 
 @app.route("/api/company")
 def api_company():
@@ -55,8 +81,7 @@ def api_company():
 @app.route("/api/status")
 def api_status():
     account_status = {
-        'customer_id': [1001, 1002, 1003, 1004, 1005, 1006],  # Links to customer records
-        'status': ['active', 'active', 'active', 'suspended', 'active', 'active']
+        'status': ['active', 'suspended']
     }
     return jsonify(account_status)
 
