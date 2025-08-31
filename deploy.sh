@@ -8,8 +8,8 @@ set -e  # Exit on any error
 # ============================================================================
 # CONFIGURATION - Update these for each project
 # ============================================================================
-PROJECT_ID="ingwane-imikhaza"
-SERVICE_NAME="imikhaza" 
+PROJECT_ID="ingwane-khuphela"
+SERVICE_NAME="khuphela" 
 REGION="us-east1"
 
 SERVICE_ACCOUNT_KEY="${HOME}/.gcp-keys/${PROJECT_ID}-key.json"
