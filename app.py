@@ -16,7 +16,7 @@ api = Api(
     version='1.0', 
     title='Labs Training API',
     description='API for Data Engineering ETL training',
-    doc='/docs/'  # Documentation will be available at /docs/
+    doc='/'  # Documentation at root of sub-domain
 )
 
 # Define the customer model for documentation
