@@ -1,5 +1,7 @@
-from flask import Flask, render_template, request, jsonify, redirect, url_for, session
+from flask import Flask, request
 import os
+from flask_restx import Api, Resource, fields
+from functools import wraps
 import json
 
 # Get the version number
@@ -8,118 +10,147 @@ from version import __version__
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-for-development')
 
+# Initialize Flask-RESTX
+api = Api(
+    app, 
+    version='1.0', 
+    title='Labs Training API',
+    description='API for Data Engineering training',
+    doc='/docs/'  # Documentation will be available at /docs/
+)
+
+# Define the customer model for documentation
+customer_model = api.model('Customer', {
+    'customer_id': fields.Integer(required=True, description='Customer ID'),
+    'first_name' : fields.String(required=True, description='First name'),
+    'last_name'  : fields.String(required=True, description='Last name'),
+    'email'      : fields.String(required=True, description='Email address'),
+    'phone'      : fields.String(required=True, description='Phone number'),
+    'postcode'   : fields.String(required=True, description='UK postcode')
+})
+
+# Error model
+error_model = api.model('Error', {
+    'error': fields.String(description='Error message')
+})
+
 def enriched_customers():
-    enriched_customers = {
+    return {
         'customer_id': [1001, 1002, 1003, 1004, 1005, 1006],
-        'first_name': ['John', 'Jane', 'Mike', 'Sarah', 'Bob', 'Alice'],
-        'last_name': ['Smith', 'Doe', 'Johnson', 'Wilson', 'Brown', 'Cooper'],
-        'email': ['john@email.com','jane@email.com','mike@techcorp.com','sarah@retailplus.com','bob@email.com','alice@freelance.com'],
-        'phone': ['01234567890', '01987654321', '01555123456', '01777888999', '01111222333', '01444555666'],
-        'postcode': ['SW1A1AA', 'M11AF', 'B11BB', 'LS12AJ', 'NE13NG', 'CF102HH'],
-        'status': ['active', 'active', 'active', 'suspended', 'active', 'active'],
+        'first_name' : ['John', 'Jane', 'Mike', 'Sarah', 'Bob', 'Alice'],
+        'last_name'  : ['Smith', 'Doe', 'Johnson', 'Wilson', 'Brown', 'Cooper'],
+        'email'      : ['john@email.com','jane@email.com','mike@techcorp.com','sarah@retailplus.com','bob@email.com','alice@freelance.com'],
+        'phone'      : ['01234567890', '01987654321', '01555123456', '01777888999', '01111222333', '01444555666'],
+        'postcode'   : ['SW1A1AA', 'M11AF', 'B11BB', 'LS12AJ', 'NE13NG', 'CF102HH'],
     }
-    return enriched_customers
-
-def regions():
-    regions = {
-        'postcode': ['SW1A1AA', 'M11AF', 'B11BB', 'LS12AJ', 'NE13NG', 'CF102HH'],
-        'region': ['London', 'North West', 'West Midlands', 'Yorkshire and The Humber', 'North East', 'Wales'],
-        'country': ['England', 'England', 'England', 'England', 'England', 'Wales'],
-        'district': ['Westminster', 'Manchester', 'Birmingham', 'Leeds', 'Newcastle', 'Cardiff'],
-        'longitude': [-0.1419, -2.2426, -1.8904, -1.5491, -1.6131, -3.1791],
-        'latitude': [51.5014, 53.4794, 52.4796, 53.7997, 54.9738, 51.4816],
-        'geo_enriched': [1, 1, 1, 1, 1, 1]
-    }
-    return regions
-
 
 # Decorator for header-based auth
 def require_api_key_header(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         api_key = request.headers.get('X-API-Key')
-        if api_key != 'training-key-header':
-            return jsonify({'error': 'Invalid or missing API key in header'}), 401
+        expected_key = os.environ.get('TRAINING_API_KEY_HEADER', 'training-key-header')
+        if api_key != expected_key:
+            return {'error': 'Invalid or missing API key in header'}, 401
         return f(*args, **kwargs)
     return decorated_function
 
-# Decorator for query parameter auth
 def require_api_key_param(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         api_key = request.args.get('api_key')
-        if api_key != 'training-key-param':
-            return jsonify({'error': 'Invalid or missing API key parameter'}), 401
+        expected_key = os.environ.get('TRAINING_API_KEY_PARAM', 'training-key-param')
+        if api_key != expected_key:
+            return {'error': 'Invalid or missing API key parameter'}, 401
         return f(*args, **kwargs)
     return decorated_function
 
-# 1. Open access - no authentication
-@app.route("/customer")
-def api_customer():
-    data = enriched_customers()
-    return jsonify(data)
+# Create namespaces for different auth types
+open_ns = api.namespace('open', description='Open access endpoints')
+header_auth_ns = api.namespace('header-auth', description='Header authentication required')
+param_auth_ns = api.namespace('param-auth', description='Query parameter authentication required')
 
-# 2. Header-based authentication
-@app.route("/customer1")
-@require_api_key_header
-def api_customer1():
-    data = enriched_customers()
-    return jsonify(data)
+# Open access endpoints
+@open_ns.route('/customer')
+class CustomerList(Resource):
+    @api.marshal_list_with(customer_model)
+    def get(self):
+        """Get all customers - no authentication required"""
+        return [dict(zip(enriched_customers().keys(), values)) 
+                for values in zip(*enriched_customers().values())]
 
-# 3. Query parameter authentication
-@app.route("/customer2")
-@require_api_key_param
-def api_customer2():
-    data = enriched_customers()
-    return jsonify(data)
+@open_ns.route('/customer/<int:customer_id>')
+class Customer(Resource):
+    @api.marshal_with(customer_model)
+    @api.response(404, 'Customer not found', error_model)
+    def get(self, customer_id):
+        """Get a specific customer by ID - no authentication required"""
+        data = enriched_customers()
+        try:
+            index = data['customer_id'].index(customer_id)
+            return {key: values[index] for key, values in data.items()}
+        except ValueError:
+            api.abort(404, 'Customer not found')
 
-@app.route("/customer/<int:customer_id>")
-def api_customer_by_id(customer_id):
-    data = enriched_customers()
-    try:
-        index = data['customer_id'].index(customer_id)
-        customer = {key: values[index] for key, values in data.items()}
-        return jsonify(customer)
-    except ValueError:
-        return jsonify({'error': 'Customer not found'}), 404
+# Header authentication endpoints
+@header_auth_ns.route('/customer1')
+class Customer1List(Resource):
+    @api.marshal_list_with(customer_model)
+    @api.doc(security='apikey')
+    @api.header('X-API-Key', 'API Key', required=True)
+    @require_api_key_header
+    def get(self):
+        """Get all customers - requires X-API-Key header"""
+        return [dict(zip(enriched_customers().keys(), values)) 
+                for values in zip(*enriched_customers().values())]
 
-@app.route("/region")
-def api_region():
-    data = regions()
-    return jsonify(data)
+@header_auth_ns.route('/customer1/<int:customer_id>')
+class Customer1(Resource):
+    @api.marshal_with(customer_model)
+    @api.doc(security='apikey')
+    @api.header('X-API-Key', 'API Key', required=True)
+    @api.response(404, 'Customer not found', error_model)
+    @require_api_key_header
+    def get(self, customer_id):
+        """Get a specific customer by ID - requires X-API-Key header"""
+        data = enriched_customers()
+        try:
+            index = data['customer_id'].index(customer_id)
+            return {key: values[index] for key, values in data.items()}
+        except ValueError:
+            api.abort(404, 'Customer not found')
 
-@app.route("/region/<postcode>")
-def api_region_by_postcode(postcode):
-    data = regions()
-    try:
-        index = data['postcode'].index(postcode)
-        region = {key: values[index] for key, values in data.items()}
-        return jsonify(region)
-    except ValueError:
-        return jsonify({'error': 'Postcode not found'}), 404
+# Query parameter authentication endpoints
+@param_auth_ns.route('/customer2')
+class Customer2List(Resource):
+    @api.marshal_list_with(customer_model)
+    @api.doc(params={'api_key': 'API Key for authentication'})
+    @require_api_key_param
+    def get(self):
+        """Get all customers - requires api_key query parameter"""
+        return [dict(zip(enriched_customers().keys(), values)) 
+                for values in zip(*enriched_customers().values())]
 
-@app.route("/company")
-def api_company():
-    companies = {
-        'customer_id': [1001, 1002, 1003, 1004, 1005, 1006],  # Links to customer records
-        'company': ['', '', 'TechCorp Ltd', 'Retail Plus', '', 'Freelance Design'],
-        'company_size': ['Individual', 'Individual', 'Medium (50-250 employees)', 'Large (250+ employees)', 'Individual', 'Micro (1-10 employees)'],
-        'industry': ['Personal', 'Personal', 'Technology', 'Retail', 'Personal', 'Creative Services'],
-        'annual_revenue': ['N/A', 'N/A', '£2M-£10M', '£10M+', 'N/A', '£0-£100K'],
-        'is_business': [0, 0, 1, 1, 0, 1]
-    }
-    return jsonify(companies)
+@param_auth_ns.route('/customer2/<int:customer_id>')
+class Customer2(Resource):
+    @api.marshal_with(customer_model)
+    @api.doc(params={'api_key': 'API Key for authentication'})
+    @api.response(404, 'Customer not found', error_model)
+    @require_api_key_param
+    def get(self, customer_id):
+        """Get a specific customer by ID - requires api_key query parameter"""
+        data = enriched_customers()
+        try:
+            index = data['customer_id'].index(customer_id)
+            return {key: values[index] for key, values in data.items()}
+        except ValueError:
+            api.abort(404, 'Customer not found')
 
-@app.route("/status")
-def api_status():
-    account_status = {
-        'status': ['active', 'suspended']
-    }
-    return jsonify(account_status)
-
-@app.route('/version')
-def version():
-    return __version__, 200
+@api.route('/version')
+class Version(Resource):
+    def get(self):
+        """Get API version"""
+        return {'version': __version__}
 
 if __name__ == '__main__':
     port = int(os.environ.get('PORT', 8080))
