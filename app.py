@@ -32,8 +32,44 @@ def regions():
     }
     return regions
 
+
+# Decorator for header-based auth
+def require_api_key_header(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.headers.get('X-API-Key')
+        if api_key != 'training-key-header':
+            return jsonify({'error': 'Invalid or missing API key in header'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+# Decorator for query parameter auth
+def require_api_key_param(f):
+    @wraps(f)
+    def decorated_function(*args, **kwargs):
+        api_key = request.args.get('api_key')
+        if api_key != 'training-key-param':
+            return jsonify({'error': 'Invalid or missing API key parameter'}), 401
+        return f(*args, **kwargs)
+    return decorated_function
+
+# 1. Open access - no authentication
 @app.route("/customer")
 def api_customer():
+    data = enriched_customers()
+    return jsonify(data)
+
+# 2. Header-based authentication
+@app.route("/customer1")
+@require_api_key_header
+def api_customer1():
+    data = enriched_customers()
+    return jsonify(data)
+
+# 3. Query parameter authentication
+@app.route("/customer2")
+@require_api_key_param
+def api_customer2():
     data = enriched_customers()
     return jsonify(data)
 
