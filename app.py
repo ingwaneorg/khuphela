@@ -32,16 +32,12 @@ def regions():
     }
     return regions
 
-@app.route("/api")
-def block_api_root():
-    return "Access to /api is not allowed", 403
-
-@app.route("/api/customer")
+@app.route("/customer")
 def api_customer():
     data = enriched_customers()
     return jsonify(data)
 
-@app.route("/api/customer/<int:customer_id>")
+@app.route("/customer/<int:customer_id>")
 def api_customer_by_id(customer_id):
     data = enriched_customers()
     try:
@@ -51,12 +47,12 @@ def api_customer_by_id(customer_id):
     except ValueError:
         return jsonify({'error': 'Customer not found'}), 404
 
-@app.route("/api/region")
+@app.route("/region")
 def api_region():
     data = regions()
     return jsonify(data)
 
-@app.route("/api/region/<postcode>")
+@app.route("/region/<postcode>")
 def api_region_by_postcode(postcode):
     data = regions()
     try:
@@ -66,7 +62,7 @@ def api_region_by_postcode(postcode):
     except ValueError:
         return jsonify({'error': 'Postcode not found'}), 404
 
-@app.route("/api/company")
+@app.route("/company")
 def api_company():
     companies = {
         'customer_id': [1001, 1002, 1003, 1004, 1005, 1006],  # Links to customer records
@@ -78,7 +74,7 @@ def api_company():
     }
     return jsonify(companies)
 
-@app.route("/api/status")
+@app.route("/status")
 def api_status():
     account_status = {
         'status': ['active', 'suspended']
