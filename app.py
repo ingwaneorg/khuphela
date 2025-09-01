@@ -15,7 +15,7 @@ api = Api(
     app, 
     version='1.0', 
     title='Labs Training API',
-    description='API for Data Engineering training',
+    description='API for Data Engineering ETL training',
     doc='/docs/'  # Documentation will be available at /docs/
 )
 
@@ -51,7 +51,7 @@ def require_api_key_header(f):
         api_key = request.headers.get('X-API-Key')
         expected_key = os.environ.get('TRAINING_API_KEY_HEADER', 'training-key-header')
         if api_key != expected_key:
-            return {'error': 'Invalid or missing API key in header'}, 401
+            api.abort(401, 'Invalid or missing API key parameter')
         return f(*args, **kwargs)
     return decorated_function
 
@@ -61,17 +61,12 @@ def require_api_key_param(f):
         api_key = request.args.get('api_key')
         expected_key = os.environ.get('TRAINING_API_KEY_PARAM', 'training-key-param')
         if api_key != expected_key:
-            return {'error': 'Invalid or missing API key parameter'}, 401
+            api.abort(401, 'Invalid or missing API key parameter')
         return f(*args, **kwargs)
     return decorated_function
 
-# Create namespaces for different auth types
-open_ns = api.namespace('open', description='Open access endpoints')
-header_auth_ns = api.namespace('header-auth', description='Header authentication required')
-param_auth_ns = api.namespace('param-auth', description='Query parameter authentication required')
-
 # Open access endpoints
-@open_ns.route('/customer')
+@api.route('/customer')
 class CustomerList(Resource):
     @api.marshal_list_with(customer_model)
     def get(self):
@@ -79,7 +74,7 @@ class CustomerList(Resource):
         return [dict(zip(enriched_customers().keys(), values)) 
                 for values in zip(*enriched_customers().values())]
 
-@open_ns.route('/customer/<int:customer_id>')
+@api.route('/customer/<int:customer_id>')
 class Customer(Resource):
     @api.marshal_with(customer_model)
     @api.response(404, 'Customer not found', error_model)
@@ -93,7 +88,7 @@ class Customer(Resource):
             api.abort(404, 'Customer not found')
 
 # Header authentication endpoints
-@header_auth_ns.route('/customer1')
+@api.route('/customer1')
 class Customer1List(Resource):
     @api.marshal_list_with(customer_model)
     @api.doc(security='apikey')
@@ -104,7 +99,7 @@ class Customer1List(Resource):
         return [dict(zip(enriched_customers().keys(), values)) 
                 for values in zip(*enriched_customers().values())]
 
-@header_auth_ns.route('/customer1/<int:customer_id>')
+@api.route('/customer1/<int:customer_id>')
 class Customer1(Resource):
     @api.marshal_with(customer_model)
     @api.doc(security='apikey')
@@ -121,7 +116,7 @@ class Customer1(Resource):
             api.abort(404, 'Customer not found')
 
 # Query parameter authentication endpoints
-@param_auth_ns.route('/customer2')
+@api.route('/customer2')
 class Customer2List(Resource):
     @api.marshal_list_with(customer_model)
     @api.doc(params={'api_key': 'API Key for authentication'})
@@ -131,7 +126,7 @@ class Customer2List(Resource):
         return [dict(zip(enriched_customers().keys(), values)) 
                 for values in zip(*enriched_customers().values())]
 
-@param_auth_ns.route('/customer2/<int:customer_id>')
+@api.route('/customer2/<int:customer_id>')
 class Customer2(Resource):
     @api.marshal_with(customer_model)
     @api.doc(params={'api_key': 'API Key for authentication'})
