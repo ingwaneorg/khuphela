@@ -13,7 +13,7 @@ pip install -r requirements.txt
 python app.py
 ```
 
-The API and its Swagger docs will be available at `http://localhost:8000`.
+The API and its Swagger docs will be available at `http://localhost:8000/homesphere/v1/`.
 
 ## Endpoints
 

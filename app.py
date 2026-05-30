@@ -13,7 +13,8 @@ api = Api(
     version='1.0',
     title='Labs Training API',
     description='API for Data Engineering ETL training',
-    doc='/'
+    prefix='/homesphere/v1',
+    doc='/homesphere/v1/'
 )
 
 specs_model = api.model('Specs', {
