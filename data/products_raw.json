@@ -1,0 +1,103 @@
+{
+  "products": [
+    {
+      "product_id": "P001",
+      "name": "Smart Thermostat Pro",
+      "category": "Thermostats",
+      "specs": {
+        "rrp": 89.99,
+        "warranty_years": 2,
+        "colour": "White",
+        "connectivity": "Wi-Fi"
+      }
+    },
+    {
+      "product_id": "P002",
+      "name": "Smart Thermostat Lite",
+      "category": "Thermostats",
+      "specs": {
+        "rrp": 59.99,
+        "warranty_years": 1,
+        "colour": "White",
+        "connectivity": "Wi-Fi"
+      }
+    },
+    {
+      "product_id": "P003",
+      "name": "Motion Sensor",
+      "category": "Sensors",
+      "specs": {
+        "rrp": 24.99,
+        "warranty_years": 1,
+        "colour": "White",
+        "connectivity": "Zigbee"
+      }
+    },
+    {
+      "product_id": "P004",
+      "name": "Door Sensor",
+      "category": "Sensors",
+      "specs": {
+        "rrp": 18.99,
+        "warranty_years": 1,
+        "colour": "White",
+        "connectivity": "Zigbee"
+      }
+    },
+    {
+      "product_id": "P005",
+      "name": "Smart Camera Indoor",
+      "category": "Cameras",
+      "specs": {
+        "rrp": 129.99,
+        "warranty_years": 2,
+        "colour": "Black",
+        "connectivity": "Wi-Fi"
+      }
+    },
+    {
+      "product_id": "P006",
+      "name": "Smart Camera Outdoor",
+      "category": "Cameras",
+      "specs": {
+        "rrp": 149.99,
+        "warranty_years": 2,
+        "colour": "Black",
+        "connectivity": "Wi-Fi"
+      }
+    },
+    {
+      "product_id": "P007",
+      "name": "Smart Plug",
+      "category": "Smart Plugs",
+      "specs": {
+        "rrp": 14.99,
+        "warranty_years": 1,
+        "colour": "White",
+        "connectivity": "Wi-Fi"
+      }
+    },
+    {
+      "product_id": "P008",
+      "name": "Smart Plug with Energy Monitor",
+      "category": "Smart Plugs",
+      "specs": {
+        "rrp": 19.99,
+        "warranty_years": 1,
+        "colour": "White",
+        "connectivity": "Wi-Fi"
+      }
+    },
+    {
+      "product_id": "P009",
+      "name": "Smart Hub",
+      "category": "Hubs",
+      "specs": {
+        "rrp": 49.99,
+        "warranty_years": 2,
+        "colour": "Black",
+        "connectivity": "Wi-Fi"
+      }
+    }
+  ]
+}
