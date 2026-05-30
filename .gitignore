@@ -1,7 +1,8 @@
 # this project
 last_deployment_url.txt
 run.py
-bin/*
+bin/
+vault/
 
 # Byte-compiled / optimized / DLL files
 __pycache__/
