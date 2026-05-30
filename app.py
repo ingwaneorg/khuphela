@@ -2,7 +2,6 @@ from flask import Flask, request
 import os
 from flask_restx import Api, Resource, fields
 from functools import wraps
-import json
 
 # Get the version number
 from version import __version__
