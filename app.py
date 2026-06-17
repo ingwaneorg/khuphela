@@ -18,7 +18,7 @@ authorizations = {
 
 api = Api(
     app,
-    version='1.0',
+    version=__version__,
     title='Labs Training API',
     description='API for Data Engineering ETL training',
     prefix='/homesphere/v1',
