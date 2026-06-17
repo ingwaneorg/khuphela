@@ -8,13 +8,22 @@ from version import __version__
 app = Flask(__name__)
 app.secret_key = os.environ.get('SECRET_KEY', 'fallback-for-development')
 
+authorizations = {
+    'apikey': {
+        'type': 'apiKey',
+        'in': 'header',
+        'name': 'X-API-Key',
+    }
+}
+
 api = Api(
     app,
     version='1.0',
     title='Labs Training API',
     description='API for Data Engineering ETL training',
     prefix='/homesphere/v1',
-    doc='/homesphere/v1/'
+    doc='/homesphere/v1/',
+    authorizations=authorizations,
 )
 
 specs_model = api.model('Specs', {
@@ -92,7 +101,6 @@ class Product(Resource):
 class Product1List(Resource):
     @api.marshal_list_with(product_model)
     @api.doc(security='apikey')
-    @api.header('X-API-Key', 'API Key', required=True)
     @require_api_key_header
     def get(self):
         """Get all products - requires X-API-Key header"""
@@ -102,7 +110,6 @@ class Product1List(Resource):
 class Product1(Resource):
     @api.marshal_with(product_model)
     @api.doc(security='apikey')
-    @api.header('X-API-Key', 'API Key', required=True)
     @api.response(404, 'Product not found', error_model)
     @require_api_key_header
     def get(self, product_id):
