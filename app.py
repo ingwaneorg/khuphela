@@ -61,7 +61,7 @@ def require_api_key_header(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         api_key = request.headers.get('X-API-Key')
-        expected_key = os.environ.get('TRAINING_API_KEY_HEADER', 'training-key-header')
+        expected_key = os.environ.get('HEADER_API_KEY', 'training-key-header')
         if api_key != expected_key:
             api.abort(401, 'Invalid or missing API key parameter')
         return f(*args, **kwargs)
@@ -71,7 +71,7 @@ def require_api_key_param(f):
     @wraps(f)
     def decorated_function(*args, **kwargs):
         api_key = request.args.get('api_key')
-        expected_key = os.environ.get('TRAINING_API_KEY_PARAM', 'training-key-param')
+        expected_key = os.environ.get('QUERY_API_KEY', 'training-key-param')
         if api_key != expected_key:
             api.abort(401, 'Invalid or missing API key parameter')
         return f(*args, **kwargs)
